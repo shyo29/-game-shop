@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shyo Game Shop</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0b0f17;
+            --card: rgba(26, 34, 53, 0.7);
+            --orange: #f3a61e;
+            --blue: #3b82f6;
+            --green: #10b981;
+            --border: rgba(255, 255, 255, 0.1);
+            --neon-shadow: 0 0 15px rgba(243, 166, 30, 0.4), inset 0 0 10px rgba(243, 166, 30, 0.2);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: white; padding-bottom: 80px; overflow-x: hidden; }
+        
+        /* === Splash Screen Style === */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            transition: 0.5s ease-out;
+        }
+        .splash-logo-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            animation: pulse 2s infinite ease-in-out;
+        }
+        .splash-inner-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 40px rgba(243, 166, 30, 0.6);
+            background: url('https://i.ibb.co/jvmHPTVd/IMG-20260316-192434-551.jpg') center/cover;
+            margin-bottom: 20px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; filter: drop-shadow(0 0 20px var(--orange)); }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .loading-bar {
+            width: 150px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: var(--orange);
+            animation: load 3s forwards linear;
+        }
+        @keyframes load {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        .logo-img-container {
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--orange); margin-right: 12px; box-shadow: var(--neon-shadow); background: url('https://i.ibb.co/jvmHPTVd/IMG-20260316-192434-551.jpg') center/cover; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        
+        #custom-notice { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 350px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--orange); border-radius: 15px; padding: 15px; z-index: 10001; color: white; transition: 0.5s ease-in-out; box-shadow: 0 8px 32px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 12px; }
+        #custom-notice.show { top: 20px; }
+        header { padding: 20px 15px; background: rgba(9, 12, 20, 0.8); display: flex; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border); }
+        .logo-area { display: flex; align-items: center; }
+        .header-title b { font-size: 18px; letter-spacing: 1px; color: var(--orange); }
+        .header-title p { font-size: 11px; color: #888; }
+        .slider-box { border-radius: 20px; overflow: hidden; margin: 15px; height: 190px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .slider-wrapper { display: flex; width: 400%; height: 100%; animation: slideAnim 15s infinite ease-in-out; }
+        .slide { width: 25%; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; }
+        @keyframes slideAnim { 0%, 20% { transform: translateX(0); } 25%, 45% { transform: translateX(-25%); } 50%, 70% { transform: translateX(-50%); } 75%, 95% { transform: translateX(-75%); } 100% { transform: translateX(0); } }
+        .announcement-container { margin: 15px; }
+        .ann-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 10px; }
+        .ann-box i { color: var(--orange); font-size: 18px; }
+        .marquee-text { font-size: 13px; color: #ddd; font-weight: 500; flex: 1; }
+        .category-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 5px 15px; margin-bottom: 10px; scrollbar-width: none; }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .cat-chip { padding: 8px 18px; background: var(--card); border-radius: 20px; white-space: nowrap; font-size: 13px; border: 1px solid var(--border); transition: 0.3s; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .cat-chip img { width: 18px; border-radius: 2px; }
+        .cat-chip.active { background: var(--orange); color: black; font-weight: bold; border-color: var(--orange); box-shadow: 0 0 10px var(--orange); }
+        .section-title { margin: 20px 15px 12px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 18px; background: var(--orange); border-radius: 10px; }
+        .game-menu { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; padding: 0 15px; }
+        .game-item { background: var(--card); border-radius: 18px; overflow: hidden; border: 1px solid var(--border); transition: 0.3s; position: relative; }
+        .game-item:active { transform: scale(0.95); }
+        .game-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; }
+        .game-name { padding: 10px 5px; font-size: 12px; font-weight: bold; text-align: center; }
+        .hot-tag { position: absolute; top: 5px; right: 5px; background: #ff3e3e; color: white; font-size: 8px; padding: 2px 6px; border-radius: 5px; font-weight: bold; }
+        
+        .item-card { border: 1px solid var(--border); transition: 0.3s; }
+        .item-card.selected { border: 2px solid var(--orange); background: rgba(243, 166, 30, 0.1); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(243, 166, 30, 0.2); }
+        
+        .history-item { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 15px; border-radius: 18px; margin: 12px 15px; border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s; position: relative; }
+        .delete-btn { position: absolute; top: 15px; right: 15px; color: #ff3e3e; font-size: 16px; padding: 5px; cursor: pointer; }
+        .page { display: none; min-height: 100vh; animation: fadeIn 0.4s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(9, 12, 20, 0.95); height: 75px; display: flex; justify-content: space-around; align-items: center; backdrop-filter: blur(15px); border-top: 1px solid var(--border); z-index: 4000; }
+        .nav-item { text-align: center; color: #666; transition: 0.3s; flex: 1; }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 500; }
+        .nav-item.active { color: var(--orange); transform: translateY(-5px); }
+        .nav-item.active i { filter: drop-shadow(0 0 8px var(--orange)); }
+        .btn-main { width: 100%; padding: 16px; background: var(--orange); color: black; border: none; border-radius: 14px; font-weight: 800; cursor: pointer; box-shadow: 0 0 15px rgba(243, 166, 30, 0.3); }
+        .btn-main:disabled { background: #444; color: #888; box-shadow: none; cursor: not-allowed; }
+        .login-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid var(--border); background: #080b13; color: white; margin-bottom: 15px; outline: none; }
+        #order-modal, #topup-modal, #tiktok-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-card { background: var(--card); width: 100%; border-radius: 25px; padding: 25px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .copy-box { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .id-saver-list { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .id-tag { background: #1a2235; padding: 6px 12px; border-radius: 8px; font-size: 12px; border: 1px solid var(--border); white-space: nowrap; cursor: pointer; }
+
+        /* TikTok Service Styles */
+        #tiktok-page { background: #121624; color: white; min-height: 100vh; }
+        .package-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .card-tk { background: white; border-radius: 12px; padding: 15px 10px; text-align: center; position: relative; color: #333; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.1s; }
+        .card-tk:active { transform: scale(0.95); }
+        .gift-tag { position: absolute; top: -5px; left: -5px; background: #222; color: white; font-size: 10px; padding: 2px 5px; border-radius: 4px; display: flex; align-items: center; gap: 2px; z-index: 10; }
+        .old-p { color: #d9534f; text-decoration: line-through; font-size: 11px; display: block; }
+        .new-p { font-size: 13px; font-weight: 800; color: #1a1f35; }
+        .tk-logo-small { width: 45px; height: 45px; margin-bottom: 8px; }
+        .icon-row { display: flex; justify-content: center; align-items: center; gap: 5px; margin-bottom: 5px; }
+        .play-box { background: #2c3e50; color: white; font-size: 9px; padding: 2px 4px; border-radius: 3px; }
+        .badge-f { position: absolute; top: 5px; right: 5px; background: #3498db; color: white; font-size: 9px; padding: 2px 4px; border-radius: 3px; }
+        .badge-s { position: absolute; top: 5px; right: 5px; background: #e67e22; color: white; font-size: 9px; padding: 2px 4px; border-radius: 3px; }
+
+        /* Update Modal Style */
+        #update-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: none; align-items: center; justify-content: center; padding: 25px; backdrop-filter: blur(10px); }
+        .update-card { background: var(--card); border: 2px solid var(--orange); border-radius: 25px; padding: 30px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 0 30px rgba(243, 166, 30, 0.3); }
+        .update-version { background: var(--orange); color: black; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 12px; margin: 15px 0; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div id="splash-screen">
+    <div class="splash-logo-box">
+        <div class="splash-inner-logo"></div>
+        <h2 style="color: var(--orange); font-size: 24px; letter-spacing: 5px; font-weight: 900; text-shadow: 0 0 15px rgba(243, 166, 30, 0.4);">SHYO SHOP</h2>
+        <p style="color: #666; font-size: 11px; margin-top: 8px; letter-spacing: 2px;">LOADING GAMER ASSETS...</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+    </div>
+</div>
+
+<div id="custom-notice">
+    <div style="width:40px; height:40px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center;"><i class="fas fa-bell"></i></div>
+    <div><b id="notice-title">အကြောင်းကြားစာ</b><br><small id="notice-msg">လုပ်ဆောင်ချက် အောင်မြင်ပါသည်</small></div>
+</div>
+
+<div id="main-app">
+    <div id="home-page" class="page active">
+        <header>
+            <div class="logo-area">
+                <div class="logo-img-container"></div>
+                <div class="header-title">
+                    <b>SHYO SHOP</b>
+                    <p>Welcome back, Gamer!</p>
+                </div>
+            </div>
+            <i class="fas fa-search" style="color: #888; font-size: 20px;"></i>
+        </header>
+
+        <div style="padding: 10px 15px; background: rgba(255,166,30,0.1); margin: 0 15px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px dashed var(--orange);">
+            <span style="font-size: 13px;">Wallet Balance:</span>
+            <b id="header-bal" style="color: var(--orange);">0 Ks</b>
+        </div>
+
+        <div class="slider-box">
+            <div class="slider-wrapper">
+                <div class="slide"><img src="https://i.ibb.co/v4DHfvps/Lumii-20260326-014004149.jpg"></div>
+                <div class="slide"><img src="https://i.ibb.co/hxf0hJ3f/IMG-20260326-013917.jpg"></div>                
+                <div class="slide"><img src="https://i.ibb.co/fVT0vHKs/Lumii-20260326-014306844.jpg"></div>
+                <div class="slide"><img src="https://i.ibb.co/mV34sTZr/Lumii-20260326-013511993.jpg"></div>
+            </div>
+        </div>
+        <div style="margin: 0 15px 15px; text-align: center; overflow: hidden; background: rgba(255,255,255,0.03); border-radius: 10px; padding: 5px;">
+            <marquee behavior="scroll" direction="left" scrollamount="6">
+                <span style="font-weight: bold; font-size: 14px;">
+                    Shyo Game Shop မှ ကြိုဆိုပါသည်။ လူကြီးမင်းတို့ စိတ်ချယုံကြည်စွာ ဝယ်ယူအားပေးနိုင်ပါသည်။ စိန်စျေးနှုန်းများမှာ အမြဲပြောင်းလဲနေသောကြောင့် သေချာကြည့်ရှုပေးပါခင်ဗျာ။
+                </span>
+            </marquee>
+        </div>
+        <div class="announcement-container">
+            <div class="ann-box">
+                <i class="fas fa-bullhorn"></i>                
+                <marquee class="marquee-text">ယနေ့အတွက် မှာယူမှုများကို ၁၀ မိနစ်အတွင်း အမြန်ဆောင်ရွက်ပေးနေပါသည်။</marquee>                  
+            </div>
+        </div>
+         
+        <div class="category-scroll">
+            <div class="cat-chip active" onclick="filterGames(this, 'all')">All</div>
+            <div class="cat-chip" onclick="filterGames(this, 'mlbb')">MLBB</div>
+            <div class="cat-chip" onclick="filterGames(this, 'tiktok')">TikTok</div>
+            <div class="cat-chip" onclick="filterGames(this, 'facebook')">Facebook</div>
+        </div>
+        <h3 class="section-title">Services</h3>
+        <div class="game-menu" id="main-game-list">
+            <div class="game-item" data-type="mlbb" onclick="switchNav('game')">
+                <span class="hot-tag">HOT</span>
+                <img src="https://i.ibb.co/1fSnTB9B/image.jpg" class="game-img">
+                <div class="game-name">MLBB Diamonds</div>
+            </div>
+            <div class="game-item" data-type="tiktok" onclick="switchNav('tiktok')">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6A76t1L9_J8k2Q6p5rX3_uUj_H8GfM1v4Sg&s" class="game-img">
+                <div class="game-name">TikTok Service</div>
+            </div>
+            <div class="game-item" data-type="facebook" style="opacity: 0.9;" onclick="showNotice('Coming Soon', 'Facebook Service မကြာမီလာမည်')">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7yCAsXw7V7Wf06U5_vA3O5W8E_u6k0-zG8A&s" class="game-img">
+                <div class="game-name">FB Page Like</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="game-page" class="page">
+        <header><div onclick="switchNav('home')"><i class="fas fa-arrow-left"></i> MLBB Diamonds</div></header>
+        <div style="padding: 15px 20px 5px;">
+            <p style="font-size: 13px; color: #888; margin-bottom: 10px;">Region ရွေးချယ်ပါ</p>
+            <div class="category-scroll" style="margin: 0; padding: 0;">
+                <div class="cat-chip server-chip active" onclick="selectServer(this, 'Myanmar')">
+                    <img flagcdn.com/w40/mm.png"> Myanmar
+                </div>
+                <div class="cat-chip server-chip" onclick="selectServer(this, 'Malay')">
+                    <img flagcdn.com/w40/my.png"> Malay
+                </div>
+                <div class="cat-chip server-chip" onclick="selectServer(this, 'Indo')">
+                    <img flagcdn.com/w40/id.png"> Indo
+                </div>
+                <div class="cat-chip server-chip" onclick="selectServer(this, 'Philippines')">
+                    <img flagcdn.com/w40/ph.png"> Philippines
+                </div>
+            </div>
+        </div>
+        <div id="shop-items" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;"></div>
+        <div style="padding:0 20px 20px;"><button class="btn-main" onclick="openOrder()">ဝယ်ယူမည်</button></div>
+    </div>
+
+    <div id="tiktok-page" class="page"> 
+        <header style="background: #1a1f35;">
+            <div onclick="switchNav('home')" style="display:flex; align-items:center; gap:10px; padding: 15px;">
+                <i class="fas fa-arrow-left"></i>
+                <span style="font-weight:bold;">Shyo Shop - TikTok</span>
+            </div>
+        </header>
+
+        <div class="package-grid" id="tiktok-shop-items"></div>
+    </div>
+
+    <div id="order-page" class="page"><header>မှတ်တမ်း</header><div id="history-list"></div></div>
+    <div id="notice-page" class="page"><header>သတိပေးချက်</header><div id="admin-notices" style="padding:15px;"></div></div>
+    
+    <div id="profile-page" class="page">
+        <header>ပရိုဖိုင်</header>
+        <div style="padding:20px; text-align:center;">
+            <div style="position:relative; display:inline-block;">
+                <div class="logo-img-container" style="width:110px; height:110px; border-width:3px; margin-right: 0;"></div>
+            </div>
+            <h2 id="p-name" style="margin-top:15px;">Player</h2>
+            <div class="history-item" style="margin: 20px 0; text-align: left;">
+                <p style="font-size: 12px; color: #888;">My Wallet ID: <b id="display-wallet-id" style="color:white;">-</b></p>
+                <h3 id="wallet-display" style="color: var(--orange); margin: 5px 0;">0 Ks</h3>
+                <button class="btn-main" style="padding: 8px; font-size: 12px;" onclick="document.getElementById('topup-modal').style.display='flex'">ငွေဖြည့်မည်</button>
+            </div>
+            <p style="color:#888;">Admin သို့ဆက်သွယ်ရန်</p>
+            <a href="https://t.me/Shyo29" target="_blank" style="text-decoration:none;"><button class="btn-main" style="background:var(--blue); color:white; margin-top:20px;"><i class="fab fa-telegram-plane"></i> Admin ဆက်သွယ်ရန်</button></a>
+        </div>
+    </div>
+
+    <div id="admin-page" class="page">
+        <header>Admin Panel</header>
+        <div style="padding: 15px;">
+            <h3 class="section-title">Shop Control</h3>
+            <div style="background: var(--card); padding: 15px; border-radius: 15px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <button class="btn-main" id="btn-toggle-mlbb" onclick="toggleShop('mlbb')">MLBB: OPEN</button>
+                <button class="btn-main" id="btn-toggle-tiktok" onclick="toggleShop('tiktok')">TikTok: OPEN</button>
+            </div>
+
+            <h3 class="section-title">Manage Shop Prices</h3>
+            <div id="admin-price-editor" style="background: var(--card); padding: 15px; border-radius: 15px; border: 1px solid var(--border);">
+                <select id="edit-server" class="login-input" onchange="loadAdminPrices()">
+                    <option value="Myanmar">MLBB - Myanmar</option>
+                    <option value="Malay">MLBB - Malay</option>
+                    <option value="Indo">MLBB - Indo</option>
+                    <option value="Philippines">MLBB - Philippines</option>
+                    <option value="TikTok">TikTok Services</option>
+                </select>
+                <div id="price-list-edit"></div>
+                <button class="btn-main" style="margin-top:10px;" onclick="saveNewPrices()">Save Changes</button>
+            </div>
+            <h3 class="section-title">Quick Actions</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn-main" style="background: #ff3e3e; font-size: 12px;" onclick="clearAllOrders()">Clear All Orders</button>
+                <button class="btn-main" style="background: var(--blue); font-size: 12px;" onclick="switchNav('notice')">Post News</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchNav('home')"><i class="fas fa-th-large"></i><br><span>Home</span></div>
+        <div class="nav-item" onclick="switchNav('game')"><i class="fas fa-shopping-bag"></i><br><span>Shop</span></div>
+        <div class="nav-item" onclick="switchNav('order')"><i class="fas fa-history"></i><br><span>History</span></div>
+        <div class="nav-item" onclick="switchNav('notice')"><i class="fas fa-bullhorn"></i><br><span>News</span></div>
+        <div class="nav-item" onclick="switchNav('admin')"><i class="fas fa-user-shield"></i><br><span>Admin</span></div>
+        <div class="nav-item" onclick="switchNav('profile')"><i class="fas fa-user-circle"></i><br><span>Me</span></div>
+    </nav>
+</div>
+
+<div id="order-modal">
+    <div class="modal-card">
+        <h3 id="modal-title">အော်ဒါတင်ရန်</h3><br>
+        <div id="id-input-section">
+            <p style="font-size: 12px; color: #888; margin-bottom: 5px;">Saved IDs</p>
+            <div class="id-saver-list" id="saved-ids"></div>
+            <input type="number" id="u-id" class="login-input" placeholder="User ID">
+            <input type="number" id="z-id" class="login-input" placeholder="Zone ID">
+            <button class="btn-main" id="check-btn" style="background:var(--green); margin-bottom:10px;" onclick="checkId()">စစ်ဆေးမည် <i class="fas fa-check-circle"></i></button>
+        </div>
+        
+        <div id="confirm-section" style="display:none; text-align:center;">
+            <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; border:1px solid var(--orange);">
+                <p style="color:#888; font-size:12px;">In-game Name</p>
+                <h2 id="player-nick" style="color:var(--orange); margin:10px 0;">-</h2>
+                <hr style="opacity:0.1; margin:10px 0;">
+                <div style="display:flex; justify-content:space-between; font-size:13px;">
+                    <span>Item:</span> <b id="conf-item">-</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                    <span>Price:</span> <b id="conf-price">-</b>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-top:5px;">
+                    <span>Region:</span> <b id="conf-region">-</b>
+                </div>
+            </div>
+            <button class="btn-main" style="margin-top:20px;" onclick="finalizeOrder()">အော်ဒါတင်မည် <i class="fas fa-paper-plane"></i></button>
+            <button style="width:100%; margin-top:10px; background:none; color:#888; border:none;" onclick="backToInput()">ပြန်ပြင်မည်</button>
+        </div>
+        
+        <button id="close-modal-btn" style="width:100%; margin-top:10px; background:none; color:#888; border:none;" onclick="document.getElementById('order-modal').style.display='none'">ပိတ်မည်</button>
+    </div>
+</div>
+
+<div id="tiktok-modal">
+    <div class="modal-card">
+        <h3 id="tk-modal-title">TikTok Order</h3><br>
+        <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:15px; border:1px solid var(--orange); margin-bottom: 20px;">
+            <p id="tk-item-display" style="font-weight: bold;"></p>
+            <p id="tk-price-display" style="color: var(--orange);"></p>
+        </div>
+        <input type="text" id="tk-link" class="login-input" placeholder="TikTok Video/Profile Link">
+        <button class="btn-main" onclick="finalizeTkOrder()">အော်ဒါတင်မည် <i class="fas fa-paper-plane"></i></button>
+        <button style="width:100%; margin-top:10px; background:none; color:#888; border:none;" onclick="document.getElementById('tiktok-modal').style.display='none'">ပိတ်မည်</button>
+    </div>
+</div>
+
+<div id="topup-modal">
+    <div class="modal-card">
+        <h3>Wallet ငွေဖြည့်ရန်</h3><br>
+        <div class="copy-box">
+            <div style="font-size:13px;">Kpay/Wave: <b>09403384964</b><br><small>Shin Thant Kyi</small></div>
+            <button onclick="copyAdminNo()" style="background:var(--orange); border:none; padding:5px 10px; border-radius:5px; font-weight:bold; font-size:11px;">COPY</button>
+        </div>
+        <input type="number" id="topup-amt" class="login-input" placeholder="ဖြည့်မည့်ပမာဏ (Ks)">
+        <p style="font-size: 11px; color: #888; margin-bottom: 5px;">ငွေသွင်းပြေစာ (Slip) တင်ပါ</p>
+        <input type="file" id="topup-slip" class="login-input" accept="image/*">
+        <button class="btn-main" id="topup-btn" onclick="submitTopup()">ငွေဖြည့်သွင်းမည်</button>
+        <button style="width:100%; margin-top:10px; background:none; color:#888; border:none;" onclick="document.getElementById('topup-modal').style.display='none'">ပိတ်မည်</button>
+    </div>
+</div>
+
+<div id="update-modal">
+    <div class="update-card">
+        <i class="fas fa-rocket" style="font-size: 50px; color: var(--orange); margin-bottom: 20px;"></i>
+        <h2 style="letter-spacing: 1px;">Update Available!</h2>
+        <div class="update-version" id="new-version-tag">v2.0</div>
+        <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">ဗားရှင်းအသစ် ထွက်ရှိလာပါပြီ။ ပိုမိုကောင်းမွန်သော ဝန်ဆောင်မှုများ ရရှိရန် Update ပြုလုပ်ပေးပါ။</p>
+        <a id="update-link-btn" href="#" target="_blank" style="text-decoration: none;">
+            <button class="btn-main" style="font-size: 16px;">UPDATE NOW</button>
+        </a>
+    </div>
+</div>
+
+<script>
+    const BOT_TOKEN = "8344556214:AAEHn6O5R6D-CsnuSUacbTDYIpv-xRo884k";
+    const CHAT_ID = "6342470463";
+    const ADMIN_PASSWORD = "shyo123";
+    const CURRENT_VERSION = "1.0"; // လက်ရှိ App Version
+    const noticeSound = new Audio('https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3');
+    
+    let selectedItem = null;
+    let currentServer = 'Myanmar';
+    let lastUpdateId = parseInt(localStorage.getItem('last_update_id')) || 0;
+    let tempPlayerName = "";
+    let currentTkItem = null;
+
+    // App Status Control
+    let appStatus = JSON.parse(localStorage.getItem('app_status')) || {
+        mlbb: true,
+        tiktok: true
+    };
+
+    function showNotice(title, msg) {
+        document.getElementById('notice-title').innerText = title;
+        document.getElementById('notice-msg').innerText = msg;
+        document.getElementById('custom-notice').classList.add('show');
+        
+        noticeSound.play().catch(e => console.log("Audio play failed"));
+
+        setTimeout(() => {
+            document.getElementById('custom-notice').classList.remove('show');
+        }, 4000);
+    }
+
+    function toggleShop(service) {
+        appStatus[service] = !appStatus[service];
+        localStorage.setItem('app_status', JSON.stringify(appStatus));
+        
+        const statusText = appStatus[service] ? "OPEN" : "CLOSED";
+        document.getElementById(`btn-toggle-${service}`).innerText = `${service.toUpperCase()}: ${statusText}`;
+        
+        showNotice("Status Updated", `${service.toUpperCase()} is now ${statusText}`);
+    }
+
+    function switchNav(page) {
+        if (page === 'game' && !appStatus.mlbb) {
+            showNotice("Maintenance", "MLBB Shop ကို ခေတ္တပိတ်ထားပါသည်။");
+            return;
+        }
+        if (page === 'tiktok' && !appStatus.tiktok) {
+            showNotice("Maintenance", "TikTok Service ကို ခေတ္တပိတ်ထားပါသည်။");
+            return;
+        }
+
+        if (page === 'admin') {
+            if (!checkAdminAccess()) return;
+        }
+
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(page + '-page');
+        if(target) target.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        const navItems = document.querySelectorAll('.nav-item');
+        const navMap = { 'home': 0, 'game': 1, 'order': 2, 'notice': 3, 'admin': 4, 'profile': 5, 'tiktok': 1 };
+        if (navMap[page] !== undefined) navItems[navMap[page]].classList.add('active');
+        
+        if (page === 'admin') {
+            loadAdminPrices();
+            document.getElementById(`btn-toggle-mlbb`).innerText = `MLBB: ${appStatus.mlbb ? "OPEN" : "CLOSED"}`;
+            document.getElementById(`btn-toggle-tiktok`).innerText = `TikTok: ${appStatus.tiktok ? "OPEN" : "CLOSED"}`;
+        }
+    }
+
+    let priceData = JSON.parse(localStorage.getItem('shyo_prices')) || {
+        'Myanmar': [
+            {amt:"Weekly Pass", p:"6208 Ks"}, {amt:"Twilight Pass", p:"33933 Ks"},
+            {amt:"50+50 Bonus", p:"3294 Ks"}, {amt:"150+150 Bonus", p:"9881 Ks"},
+            {amt:"250+250 Bonus", p:"15869 Ks"}, {amt:"500+500 Bonus", p:"32436 Ks"},
+            {amt:"Dia 11", p:"918 Ks"}, {amt:"Dia 22", p:"1818 Ks"},
+            {amt:"Dia 44", p:"3458 Ks"}, {amt:"Dia 86", p:"5190 Ks"},
+            {amt:"Dia 172", p:"10280 Ks"}, {amt:"Dia 257", p:"14971 Ks"},
+            {amt:"Dia 429", p:"25250 Ks"}, {amt:"Dia 515", p:"30440 Ks"},
+            {amt:"Dia 600", p:"35131 Ks"}, {amt:"Dia 706", p:"40420 Ks"},
+            {amt:"Dia 963", p:"55391 Ks"}
+        ],
+        'Malay': [
+            {amt:"Weekly Pass", p:"6900 Ks"}, {amt:"Twilight Pass", p:"49400 Ks"},
+            {amt:"50+50 Bonus", p:"4500 Ks"}, {amt:"150+150 Bonus", p:"13300 Ks"},
+            {amt:"250+250 Bonus", p:"22000 Ks"}, {amt:"500+500 Bonus", p:"44700 Ks"},
+            {amt:"Super Vale Pass", p:"4100 Ks"}, {amt:"Dia 42", p:"3500 Ks"},
+            {amt:"Dia 70", p:"5800 Ks"}, {amt:"Dia 140", p:"11400 Ks"},
+            {amt:"Dia 284", p:"22600 Ks"}, {amt:"Dia 355", p:"28500 Ks"},
+            {amt:"Dia 429", p:"34300 Ks"}, {amt:"Dia 716", p:"56500 Ks"}
+        ],
+        'Indo': [
+            {amt:"Weekly Pass", p:"7900 Ks"}, {amt:"Twilight Pass", p:"42100 Ks"},
+            {amt:"50+50 Bonus", p:"4200 Ks"}, {amt:"150+150 Bonus", p:"12600 Ks"},
+            {amt:"250+250 Bonus", p:"21200 Ks"}, {amt:"500+500 Bonus", p:"41800 Ks"},
+            {amt:"Dia 5", p:"500 Ks"}, {amt:"Dia 12", p:"1000 Ks"},
+            {amt:"Dia 19", p:"1500 Ks"}, {amt:"Dia 28", p:"2200 Ks"},
+            {amt:"Dia 44", p:"3300 Ks"}, {amt:"Dia 54", p:"4400 Ks"},
+            {amt:"Dia 85", p:"6300 Ks"}, {amt:"Dia 170", p:"12500 Ks"},
+            {amt:"Dia 240", p:"17600 Ks"}, {amt:"Dia 408", p:"24600 Ks"},
+            {amt:"Dia 568", p:"40400 Ks"}, {amt:"Dia 875", p:"61960 Ks"}
+        ],
+        'Philippines': [
+            {amt:"Weekly Pass", p:"7300 Ks"}, {amt:"Twilight Pass", p:"36300 Ks"},
+            {amt:"50+50 Bonus", p:"5600 Ks"}, {amt:"150+150 Bonus", p:"16400 Ks"},
+            {amt:"250+250 Bonus", p:"27200 Ks"}, {amt:"500+500 Bonus", p:"55300 Ks"},
+            {amt:"Dia 11", p:"800 Ks"}, {amt:"Dia 22", p:"1500 Ks"},
+            {amt:"Dia 56", p:"3700 Ks"}, {amt:"Dia 112", p:"7400 Ks"},
+            {amt:"Dia 223", p:"14700 Ks"}, {amt:"Dia 336", p:"21900 Ks"},
+            {amt:"Dia 570", p:"36500 Ks"}, {amt:"Dia 1163", p:"73000 Ks"}
+        ],
+        'TikTok': [
+            {amt:"100 Like+View နည်း", p:"247 Ks", old:"250 Ks", heart:true, play:"6.5M"},
+            {amt:"500 Like+View နည်း", p:"1170 Ks", old:"1200 Ks", gift:"1", heart:true, play:"6.5M"},
+            {amt:"1k Like+View နည်း", p:"1470 Ks", old:"1500 Ks", gift:"1", heart:true, play:"6.5M"},
+            {amt:"3k Like+View နည်း", p:"4955 Ks", old:"5000 Ks", gift:"1", heart:true, play:"6.5M"},
+            {amt:"5k Like+view နည်း", p:"9740 Ks", old:"9800 Ks", gift:"2", heart:true, play:"6.5M"},
+            {amt:"10k Like+View နည်း", p:"15850 Ks", old:"16000 Ks", gift:"3", heart:true, play:"6.5M"},
+            {amt:"View 1K", p:"197 Ks", old:"200 Ks", logo:true},
+            {amt:"View 5K", p:"950 Ks", old:"980 Ks", gift:"1", logo:true},
+            {amt:"View 10K", p:"1390 Ks", old:"1450 Ks", gift:"1", logo:true},
+            {amt:"Promote Like+View(1$)", p:"5470 Ks", old:"5500 Ks", gift:"1", logo:true},
+            {amt:"Promote Like+View(2$)", p:"11470 Ks", old:"11500 Ks", gift:"1", logo:true},
+            {amt:"Followers(100)", p:"1740 Ks", old:"1800 Ks", gift:"1", badgeF:"👤 17"},
+            {amt:"Followers(500)", p:"8410 Ks", old:"8500 Ks", gift:"2", badgeF:"👤 17"},
+            {amt:"Followers(1K)", p:"15710 Ks", old:"15800 Ks", gift:"2", badgeF:"👤 17"},
+            {amt:"Vd Save 100", p:"127 Ks", old:"130 Ks", badgeS:"🔖 4,179"},
+            {amt:"Vd Save 500", p:"570 Ks", old:"600 Ks", badgeS:"🔖 4,179"},
+            {amt:"Vd Save 1K", p:"940 Ks", old:"1000 Ks", gift:"1", badgeS:"🔖 4,179"}
+        ]
+    };
+
+    function saveNewPrices() {
+        const server = document.getElementById('edit-server').value;
+        const items = priceData[server];
+        
+        items.forEach((_, index) => {
+            priceData[server][index].amt = document.getElementById(`amt-${index}`).value;
+            priceData[server][index].p = document.getElementById(`p-${index}`).value;
+        });
+
+        localStorage.setItem('shyo_prices', JSON.stringify(priceData));
+
+        if(server === 'TikTok') renderTikTokShop();
+        else renderShop(currentServer);
+        
+        showNotice("Success", "ဈေးနှုန်းများကို ပုံသေ သိမ်းဆည်းပြီးပါပြီ");
+    }
+
+    if(!localStorage.getItem('shyo_wallet_id')) {
+        const randomId = "SHYO-W-" + Math.floor(1000 + Math.random() * 9000);
+        localStorage.setItem('shyo_wallet_id', randomId);
+    }
+    if(localStorage.getItem('shyo_balance') === null) {
+        localStorage.setItem('shyo_balance', '0');
+    }
+
+    const getWalletId = () => localStorage.getItem('shyo_wallet_id');
+    const getBalance = () => parseInt(localStorage.getItem('shyo_balance'));
+    
+    function updateWalletUI() {
+        const bal = getBalance();
+        document.getElementById('display-wallet-id').innerText = getWalletId();
+        document.getElementById('wallet-display').innerText = bal.toLocaleString() + " Ks";
+        document.getElementById('header-bal').innerText = bal.toLocaleString() + " Ks";
+        document.getElementById('p-name').innerText = "ID: " + getWalletId();
+    }
+
+    function copyAdminNo() {
+        navigator.clipboard.writeText("09403384964");
+        alert("Account Number 09403384964 copied!");
+    }
+
+    async function submitTopup() {
+        const amt = document.getElementById('topup-amt').value;
+        const fileInput = document.getElementById('topup-slip');
+        if(!amt || fileInput.files.length === 0) return alert("ပမာဏနှင့် ပြေစာထည့်ပါ");
+        const btn = document.getElementById('topup-btn');
+        btn.innerText = "တင်ပြနေသည်...";
+        btn.disabled = true;
+        const formData = new FormData();
+        formData.append('chat_id', CHAT_ID);
+        formData.append('photo', fileInput.files[0]);
+        formData.append('caption', `💰 TOPUP REQUEST\n🆔 Wallet ID: ${getWalletId()}\n💵 Amount: ${amt} Ks\n\nငွေဖြည့်ရန်: /topup ${getWalletId()} ${amt}`);
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
+            showNotice("အောင်မြင်ပါသည်", "ငွေဖြည့်သွင်းမှုကို Admin မှ စစ်ဆေးနေပါသည်");
+            document.getElementById('topup-modal').style.display = 'none';
+        } catch(e) { alert("Error!"); }
+        finally { btn.innerText = "ငွေဖြည့်သွင်းမည်"; btn.disabled = false; }
+    }
+
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 500);
+        }, 3000);
+    });
+
+    window.onload = () => { 
+        renderShop('Myanmar'); 
+        renderTikTokShop();
+        loadHistory(); 
+        loadAdminNotices();
+        updateWalletUI();
+        loadSavedIds();
+        startAdminListener(); 
+    };
+
+    function checkAdminAccess() {
+        let pass = prompt("Admin Password ကို ရိုက်ထည့်ပါ -");
+        if (pass === ADMIN_PASSWORD) {
+            showNotice("Welcome Admin", "Access Granted ✅");
+            return true;
+        } else {
+            alert("Password မှားယွင်းနေပါသည်။");
+            return false;
+        }
+    }
+
+    function loadAdminPrices() {
+        const server = document.getElementById('edit-server').value;
+        const items = priceData[server];
+        const container = document.getElementById('price-list-edit');
+        container.innerHTML = items.map((item, index) => `
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <input type="text" class="login-input" style="margin:0; flex:2;" value="${item.amt}" id="amt-${index}">
+                <input type="text" class="login-input" style="margin:0; flex:1;" value="${item.p}" id="p-${index}">
+            </div>
+        `).join('');
+    }
+
+    function clearAllOrders() {
+        if(confirm("Order မှတ်တမ်းအားလုံးကို ဖျက်မှာ သေချာသလား?")) {
+            localStorage.removeItem('orders');
+            loadHistory();
+            showNotice("Cleared", "မှတ်တမ်းအားလုံးကို ဖျက်လိုက်ပါပြီ");
+        }
+    }
+
+    function filterGames(el, type) {
+        document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        const items = document.querySelectorAll('.game-item');
+        items.forEach(item => {
+            item.style.display = (type === 'all' || item.getAttribute('data-type') === type) ? 'block' : 'none';
+        });
+    }
+
+    function selectServer(el, server) {
+        document.querySelectorAll('.server-chip').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        currentServer = server;
+        selectedItem = null;
+        renderShop(server);
+    }
+
+    function renderShop(server) {
+        const items = priceData[server];
+        document.getElementById('shop-items').innerHTML = items.map(i => `
+            <div class="history-item item-card" style="margin:0; text-align:center; cursor:pointer;" onclick="selectItem(this, '${i.amt}', '${i.p}')">
+                <div style="font-size:14px; margin-bottom:5px;">${i.amt}</div>
+                <div style="color:var(--orange); font-weight:bold;">${i.p}</div>
+            </div>
+        `).join('');
+    }
+
+    function renderTikTokShop() {
+        const items = priceData['TikTok'];
+        const container = document.getElementById('tiktok-shop-items');
+        container.innerHTML = items.map(i => `
+            <div class="card-tk" onclick="openTkOrder('${i.amt}', '${i.p.replace(/[^0-9]/g, '')}')">
+                ${i.gift ? `<div class="gift-tag">🎁 ${i.gift}</div>` : ''}
+                ${i.badgeF ? `<div class="badge-f">${i.badgeF}</div>` : ''}
+                ${i.badgeS ? `<div class="badge-s">${i.badgeS}</div>` : ''}
+                <div class="icon-row">
+                    ${i.heart ? `<span style="color:#ff4757;">❤️</span>` : ''}
+                    ${i.play ? `<span class="play-box">▶ ${i.play}</span>` : ''}
+                    ${i.logo ? `<img src="https://upload.wikimedia.org/wikipedia/en/a/a9/TikTok_logo.svg" class="tk-logo-small">` : ''}
+                </div>
+                <div style="font-size:12px; font-weight:bold; margin:5px 0;">${i.amt}</div>
+                ${i.old ? `<span class="old-p">${i.old}</span>` : ''}
+                <span class="new-p">${i.p}</span>
+            </div>
+        `).join('');
+    }
+
+    function selectItem(el, amt, p) {
+        document.querySelectorAll('.item-card').forEach(x => {
+            x.classList.remove('selected');
+        });
+        el.classList.add('selected');
+        selectedItem = { amt, p };
+    }
+
+    function loadSavedIds() {
+        const ids = JSON.parse(localStorage.getItem('saved_ml_ids')) || [];
+        const container = document.getElementById('saved-ids');
+        container.innerHTML = ids.map(idObj => `
+            <div class="id-tag" onclick="useSavedId('${idObj.uid}', '${idObj.zid}')">${idObj.uid}</div>
+        `).join('');
+    }
+
+    function useSavedId(uid, zid) {
+        document.getElementById('u-id').value = uid;
+        document.getElementById('z-id').value = zid;
+    }
+
+    function saveId(uid, zid) {
+        let ids = JSON.parse(localStorage.getItem('saved_ml_ids')) || [];
+        if(!ids.find(x => x.uid === uid)) {
+            ids.push({uid, zid});
+            localStorage.setItem('saved_ml_ids', JSON.stringify(ids.slice(-5)));
+            loadSavedIds();
+        }
+    }
+
+    async function checkId() {
+        const id = document.getElementById('u-id').value;
+        const zone = document.getElementById('z-id').value;
+        if(!id || !zone) return alert("ID နှင့် Zone ID ဖြည့်ပါ");
+        
+        const priceValue = parseInt(selectedItem.p.replace(/[^0-9]/g, ''));
+        if(getBalance() < priceValue) return alert("Wallet ထဲတွင် ငွေမလုံလောက်ပါ၊ အရင်ဖြည့်ပါ");
+
+        const btn = document.getElementById('check-btn');
+        btn.innerHTML = "စစ်ဆေးနေသည် <i class='fas fa-spinner fa-spin'></i>";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`https://api.isan.eu.org/nickname/ml?id=${id}&zone=${zone}`);
+            const data = await res.json();
+            if(data.name) {
+                tempPlayerName = data.name;
+                saveId(id, zone);
+                showConfirmScreen();
+            } else {
+                alert("ID ရှာမတွေ့ပါ၊ ပြန်စစ်ပေးပါ");
+                btn.innerHTML = "စစ်ဆေးမည် <i class='fas fa-check-circle'></i>";
+                btn.disabled = false;
+            }
+        } catch(e) { 
+            alert("Network Error!"); 
+            btn.innerHTML = "စစ်ဆေးမည် <i class='fas fa-check-circle'></i>";
+            btn.disabled = false;
+        }
+    }
+
+    function showConfirmScreen() {
+        document.getElementById('id-input-section').style.display = 'none';
+        document.getElementById('confirm-section').style.display = 'block';
+        document.getElementById('modal-title').innerText = "အော်ဒါအတည်ပြုရန်";
+        
+        document.getElementById('player-nick').innerText = tempPlayerName + " ✅";
+        document.getElementById('conf-item').innerText = selectedItem.amt;
+        document.getElementById('conf-price').innerText = selectedItem.p;
+        document.getElementById('conf-region').innerText = currentServer;
+    }
+
+    function backToInput() {
+        document.getElementById('id-input-section').style.display = 'block';
+        document.getElementById('confirm-section').style.display = 'none';
+        document.getElementById('modal-title').innerText = "အော်ဒါတင်ရန်";
+        document.getElementById('check-btn').innerHTML = "စစ်ဆေးမည် <i class='fas fa-check-circle'></i>";
+        document.getElementById('check-btn').disabled = false;
+    }
+
+    async function finalizeOrder() {
+        const uid = document.getElementById('u-id').value;
+        const zid = document.getElementById('z-id').value;
+        const orderUniqueId = "SHYO-" + Math.floor(Math.random() * 1000000);
+        const priceValue = parseInt(selectedItem.p.replace(/[^0-9]/g, ''));
+        
+        const order = { 
+            id: orderUniqueId, 
+            item: selectedItem.amt, 
+            status: "Pending ⏳", 
+            price: selectedItem.p, 
+            uid: uid, 
+            server: currentServer,
+            time: new Date().toLocaleTimeString()
+        };
+
+        const message = `🔔 NEW ORDER\n🆔 Order ID: ${orderUniqueId}\n💎 Item: ${selectedItem.amt}\n💰 Price: ${selectedItem.p}\n🌍 Region: ${currentServer}\n🆔 Game ID: ${uid}(${zid})\n👤 Name: ${tempPlayerName}\n💳 Paid via Wallet`;
+
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+            });
+            
+            let newBal = getBalance() - priceValue;
+            localStorage.setItem('shyo_balance', newBal.toString());
+            updateWalletUI();
+
+            let history = JSON.parse(localStorage.getItem('orders')) || [];
+            history.unshift(order);
+            localStorage.setItem('orders', JSON.stringify(history));
+            
+            showNotice("အောင်မြင်ပါသည်", `အော်ဒါ #${orderUniqueId} တင်ပြီးပါပြီ`);
+            document.getElementById('order-modal').style.display = 'none';
+            backToInput();
+            document.getElementById('u-id').value = ""; document.getElementById('z-id').value = "";
+            selectedItem = null;
+            loadHistory();
+            switchNav('home');
+        } catch(e) { alert("Order Error!"); }
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('orders')) || [];
+        const historyList = document.getElementById('history-list');
+        if (history.length === 0) {
+            historyList.innerHTML = `<div style="text-align:center; padding:50px; color:#888;">မှတ်တမ်းမရှိသေးပါ</div>`;
+            return;
+        }
+        historyList.innerHTML = history.map(h => `
+            <div class="history-item">
+                <div class="delete-btn" onclick="deleteOrder('${h.id}')"><i class="fas fa-trash-alt"></i></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 5px; width: 85%;">
+                    <small style="color:var(--orange)">#${h.id}</small> 
+                    <span style="font-size:11px;">${h.status}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; width: 85%;">
+                    <b>${h.item}</b>
+                    <b>${h.price}</b>
+                </div>
+                <div style="margin-top:5px; font-size:11px; color:#888;">ID: ${h.uid} | Region: ${h.server}</div>
+            </div>
+        `).join('');
+    }
+
+    function deleteOrder(orderId) {
+        if(confirm("ဤမှတ်တမ်းကို ဖျက်ရန် သေချာပါသလား?")) {
+            let history = JSON.parse(localStorage.getItem('orders')) || [];
+            history = history.filter(o => o.id !== orderId);
+            localStorage.setItem('orders', JSON.stringify(history));
+            loadHistory();
+        }
+    }
+
+    function openOrder() { if(!selectedItem) return alert("ပစ္စည်းအရင်ရွေးပါ"); document.getElementById('order-modal').style.display = 'flex'; }
+    
+    function loadAdminNotices() {
+        const notices = JSON.parse(localStorage.getItem('adminNotices')) || [];
+        const container = document.getElementById('admin-notices');
+        container.innerHTML = notices.length === 0 ? `<p style="color:#888; text-align:center;">သတင်းအသစ်များ မရှိသေးပါ</p>` :
+            notices.map(n => `<div class="history-item" style="margin-bottom:15px;"><b style="color:var(--orange);">${n.title}</b><p style="font-size:13px; color:#ccc;">${n.text}</p><small style="color:#666;">${n.date}</small></div>`).join('');
+    }
+
+    function openTkOrder(name, price) {
+        currentTkItem = { name, price };
+        document.getElementById('tk-item-display').innerText = "Item: " + name;
+        document.getElementById('tk-price-display').innerText = "Price: " + price + " Ks";
+        document.getElementById('tiktok-modal').style.display = 'flex';
+    }
+
+    async function finalizeTkOrder() {
+        const link = document.getElementById('tk-link').value;
+        if(!link) return alert("Link ထည့်သွင်းပေးပါ");
+        
+        const priceValue = parseInt(currentTkItem.price);
+        if(getBalance() < priceValue) return alert("ငွေမလုံလောက်ပါ");
+
+        const orderId = "TK-" + Math.floor(100000 + Math.random() * 900000);
+        const message = `🎵 TIKTOK ORDER\n🆔 ID: ${orderId}\n📦 Item: ${currentTkItem.name}\n💰 Price: ${currentTkItem.price} Ks\n🔗 Link: ${link}`;
+
+        try {
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, text: message })
+            });
+
+            let newBal = getBalance() - priceValue;
+            localStorage.setItem('shyo_balance', newBal.toString());
+            updateWalletUI();
+
+            let history = JSON.parse(localStorage.getItem('orders')) || [];
+            history.unshift({ id: orderId, item: currentTkItem.name, status: "Pending ⏳", price: currentTkItem.price + " Ks", uid: "Link Provided", server: "TikTok", time: new Date().toLocaleTimeString() });
+            localStorage.setItem('orders', JSON.stringify(history));
+
+            showNotice("အောင်မြင်ပါသည်", "TikTok Order ကို Admin ထံ ပေးပို့ပြီးပါပြီ");
+            document.getElementById('tiktok-modal').style.display = 'none';
+            document.getElementById('tk-link').value = "";
+            loadHistory();
+            switchNav('home');
+        } catch(e) { alert("Error sending order!"); }
+    }
+
+    async function startAdminListener() {
+        setInterval(async () => {
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}`);
+                const data = await res.json();
+                if (data.ok && data.result.length > 0) {
+                    data.result.forEach(update => {
+                        lastUpdateId = update.update_id;
+                        localStorage.setItem('last_update_id', lastUpdateId);
+                        if(update.message && update.message.text) {
+                            const msg = update.message.text.trim();
+
+                            // Update Command: /update 2.0 | https://t.me/yourlink
+                            if(msg.startsWith('/update')) {
+                                const parts = msg.substring(8).split('|');
+                                if(parts.length >= 2) {
+                                    const newVer = parts[0].trim();
+                                    const upLink = parts[1].trim();
+                                    
+                                    if(newVer !== CURRENT_VERSION) {
+                                        document.getElementById('new-version-tag').innerText = "v" + newVer;
+                                        document.getElementById('update-link-btn').href = upLink;
+                                        document.getElementById('update-modal').style.display = 'flex';
+                                    }
+                                }
+                            }
+
+                            if(msg.startsWith('/done')) {
+                                const targetOrderId = msg.split(' ')[1];
+                                let history = JSON.parse(localStorage.getItem('orders')) || [];
+                                let idx = history.findIndex(o => o.id === targetOrderId);
+                                if(idx !== -1) {
+                                    history[idx].status = "Success ✅";
+                                    localStorage.setItem('orders', JSON.stringify(history));
+                                    loadHistory();
+                                    showNotice("Status Updated", `Order #${targetOrderId} Success!`);
+                                }
+                            }
+                            if(msg.startsWith('/news')) {
+                                const parts = msg.substring(6).split('|');
+                                if(parts.length >= 2) {
+                                    let notices = JSON.parse(localStorage.getItem('adminNotices')) || [];
+                                    notices.unshift({ title: parts[0].trim(), text: parts[1].trim(), date: new Date().toLocaleString() });
+                                    localStorage.setItem('adminNotices', JSON.stringify(notices));
+                                    loadAdminNotices();
+                                    showNotice("သတင်းသစ်", parts[0].trim());
+                                }
+                            }
+                            if(msg.startsWith('/topup')) {
+                                const parts = msg.split(' ');
+                                if(parts.length >= 3) {
+                                    const targetId = parts[1];
+                                    const amount = parseInt(parts[2]);
+                                    if(targetId === getWalletId()) {
+                                        localStorage.setItem('shyo_balance', (getBalance() + amount).toString());
+                                        updateWalletUI();
+                                        showNotice("ငွေဖြည့်ခြင်း အောင်မြင်သည်", `${amount} Ks လက်ခံရရှိပါသည်`);
+                                    }
+                                }
+                            }
+                            if(msg === '/clear') {
+                                localStorage.removeItem('adminNotices');
+                                loadAdminNotices();
+                            }
+                        }
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }, 3000);
+    }
+</script>
+</body>
+</html>
